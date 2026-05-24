@@ -6,31 +6,21 @@
 </template>
 
 <style lang="scss">
+@import '@/styles/variables.scss';
+
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
+  font-family: $font-family;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
-  color: #2c3e50;
-}
-
-nav {
-  padding: 30px;
-
-  a {
-    font-weight: bold;
-    color: #2c3e50;
-
-    &.router-link-exact-active {
-      color: #42b983;
-    }
-  }
+  color: $color-text-primary;
+  min-height: 100vh;
 }
 
 .copyright {
   padding: 0 !important;
-  color: rgb(0, 0, 0);
-  font-size: 12px;
+  color: $color-text-secondary;
+  font-size: $font-size-xs;
   font-weight: 400;
   margin-top: auto;
   width: 100%;
@@ -38,10 +28,6 @@ nav {
   display: flex;
   justify-content: center;
   align-items: center;
-}
-
-.el-message {
-  top: 70px !important;
 }
 </style>
 <script>

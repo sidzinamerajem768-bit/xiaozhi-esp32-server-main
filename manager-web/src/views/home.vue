@@ -205,93 +205,89 @@ export default {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
+@import '@/styles/variables.scss';
+
 .welcome {
-  min-width: 900px;
+  min-width: $min-page-width;
   min-height: 506px;
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(145deg, #e6eeff, #eff0ff);
+  background: $gradient-bg;
   background-size: cover;
-  /* 确保背景图像覆盖整个元素 */
   background-position: center;
-  /* 从顶部中心对齐 */
-  -webkit-background-size: cover;
-  /* 兼容老版本WebKit浏览器 */
-  -o-background-size: cover;
-  /* 兼容老版本Opera浏览器 */
 }
 
 .add-device {
-  height: 195px;
-  border-radius: 15px;
+  height: 180px;
+  border-radius: $radius-lg;
   position: relative;
   overflow: hidden;
-  background: linear-gradient(269.62deg,
-      #e0e6fd 0%,
-      #cce7ff 49.69%,
-      #d3d3fe 100%);
+  background: $gradient-primary;
+  box-shadow: $shadow-md;
 }
 
 .add-device-bg {
   width: 100%;
   height: 100%;
   text-align: left;
-  background-image: url("@/assets/home/main-top-bg.png");
-  overflow: hidden;
+  background-image: url('@/assets/home/main-top-bg.png');
   background-size: cover;
-  /* 确保背景图像覆盖整个元素 */
   background-position: center;
-  /* 从顶部中心对齐 */
-  -webkit-background-size: cover;
-  /* 兼容老版本WebKit浏览器 */
-  -o-background-size: cover;
   box-sizing: border-box;
 
-  /* 兼容老版本Opera浏览器 */
   .hellow-text {
-    margin-left: 75px;
-    color: #3d4566;
-    font-size: 33px;
+    margin-left: 48px;
+    color: #fff;
+    font-size: 30px;
     font-weight: 700;
     letter-spacing: 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
 
   .hi-hint {
     font-weight: 400;
-    font-size: 12px;
+    font-size: $font-size-sm;
     text-align: left;
-    color: #818cae;
-    margin-left: 75px;
-    margin-top: 5px;
+    color: rgba(255, 255, 255, 0.8);
+    margin-left: 48px;
+    margin-top: 6px;
   }
 }
 
 .add-device-btn {
   display: flex;
   align-items: center;
-  margin-left: 75px;
-  margin-top: 15px;
+  margin-left: 48px;
+  margin-top: 18px;
   cursor: pointer;
 
   .left-add {
-    padding: 0 14px;
-    height: 34px;
-    border-radius: 17px;
-    background: #5778ff;
+    padding: 0 20px;
+    height: 38px;
+    border-radius: 19px;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(8px);
     color: #fff;
-    font-size: 14px;
-    font-weight: 500;
+    font-size: $font-size-base;
+    font-weight: 600;
     text-align: center;
-    line-height: 34px;
+    line-height: 38px;
+    transition: all $transition-fast;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: translateY(-1px);
+    }
   }
 
   .right-add {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    background: #5778ff;
+    width: 38px;
+    height: 38px;
+    border-radius: $radius-round;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(8px);
     margin-left: -6px;
     display: flex;
     justify-content: center;
@@ -302,28 +298,11 @@ export default {
 .device-list-container {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-  gap: 30px;
-  padding: 30px 0;
+  gap: 24px;
+  padding: 24px 0;
 }
 
-/* 在 DeviceItem.vue 的样式中 */
-.device-item {
-  margin: 0 !important;
-  /* 避免冲突 */
-  width: auto !important;
-}
-
-.footer {
-  font-size: 12px;
-  font-weight: 400;
-  margin-top: auto;
-  padding-top: 30px;
-  color: #979db1;
-  text-align: center;
-  /* 居中显示 */
-}
-
-/* 骨架屏动画 */
+/* 骨架屏 */
 @keyframes shimmer {
   100% {
     transform: translateX(100%);
@@ -331,20 +310,20 @@ export default {
 }
 
 .skeleton-item {
-  background: #fff;
-  border-radius: 8px;
+  background: $color-bg-white;
+  border-radius: $radius-md;
   padding: 20px;
   height: 120px;
   position: relative;
   overflow: hidden;
-  margin-bottom: 20px;
+  box-shadow: $shadow-sm;
 }
 
 .skeleton-image {
   width: 80px;
   height: 80px;
-  background: #f0f2f5;
-  border-radius: 4px;
+  background: $color-bg;
+  border-radius: $radius-sm;
   float: left;
   position: relative;
   overflow: hidden;
@@ -356,8 +335,8 @@ export default {
 
 .skeleton-line {
   height: 16px;
-  background: #f0f2f5;
-  border-radius: 4px;
+  background: $color-bg;
+  border-radius: $radius-sm;
   margin-bottom: 12px;
   width: 70%;
   position: relative;
@@ -366,8 +345,8 @@ export default {
 
 .skeleton-line-short {
   height: 12px;
-  background: #f0f2f5;
-  border-radius: 4px;
+  background: $color-bg;
+  border-radius: $radius-sm;
   width: 50%;
 }
 
@@ -380,8 +359,17 @@ export default {
   height: 100%;
   background: linear-gradient(90deg,
       rgba(255, 255, 255, 0),
-      rgba(255, 255, 255, 0.3),
+      rgba(255, 255, 255, 0.4),
       rgba(255, 255, 255, 0));
   animation: shimmer 1.5s infinite;
+}
+
+.footer {
+  font-size: $font-size-xs;
+  font-weight: 400;
+  margin-top: auto;
+  padding-top: 24px;
+  color: $color-text-secondary;
+  text-align: center;
 }
 </style>

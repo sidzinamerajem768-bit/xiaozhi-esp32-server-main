@@ -1,4 +1,40 @@
-// 覆盖 autofill 样式
+@import './variables.scss';
+
+/* ================================================================
+   Global Reset & Base
+   ================================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: $font-family;
+  font-size: $font-size-base;
+  color: $color-text-primary;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  background: $color-bg;
+}
+
+a {
+  color: $color-primary;
+  text-decoration: none;
+  transition: color $transition-fast;
+  &:hover {
+    color: $color-primary-light;
+  }
+}
+
+/* ================================================================
+   Autofill Fix
+   ================================================================ */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
@@ -10,23 +46,147 @@ select:-webkit-autofill:hover,
 select:-webkit-autofill:focus {
   -webkit-box-shadow: 0 0 0px 1000px transparent inset;
   transition: background-color 5000s ease-in-out 0s;
-  background-color: transparent;
+  background-color: transparent !important;
 }
 
+/* ================================================================
+   Element UI Overrides
+   ================================================================ */
+
+// --- Footer ---
 .el-footer {
-  height: 35px !important; /* 使用 !important 确保覆盖默认样式 */
+  height: $footer-height !important;
+  padding: 0 !important;
 }
 
-.el-icon-video-play, .el-icon-video-pause { 
+// --- Message ---
+.el-message {
+  top: 70px !important;
+  border-radius: $radius-sm !important;
+  box-shadow: $shadow-md !important;
+}
+
+// --- Button ---
+.el-button--primary {
+  background: $gradient-primary !important;
+  border: none !important;
+  &:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: $shadow-md;
+  }
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// --- Input ---
+.el-input__inner {
+  border-radius: $radius-sm !important;
+  transition: border-color $transition-fast, box-shadow $transition-fast;
+  &:focus {
+    border-color: $color-primary !important;
+    box-shadow: 0 0 0 2px rgba($color-primary, 0.1) !important;
+  }
+}
+
+// --- Table ---
+.el-table {
+  th.el-table__cell {
+    background: $color-bg !important;
+    color: $color-text-regular !important;
+    font-weight: 600;
+    border-bottom: 2px solid $color-border !important;
+  }
+  td.el-table__cell {
+    border-bottom: 1px solid $color-border-light !important;
+  }
+  &::before {
+    display: none !important;
+  }
+}
+
+// --- Card ---
+.el-card {
+  border-radius: $radius-md !important;
+  border: 1px solid $color-border !important;
+  box-shadow: $shadow-sm !important;
+  transition: box-shadow $transition-normal;
+  &:hover {
+    box-shadow: $shadow-md !important;
+  }
+}
+
+// --- Dialog ---
+.el-dialog {
+  border-radius: $radius-lg !important;
+  .el-dialog__header {
+    border-bottom: 1px solid $color-border-light;
+    padding: $spacing-md $spacing-lg;
+  }
+  .el-dialog__body {
+    padding: $spacing-lg;
+  }
+  .el-dialog__footer {
+    border-top: 1px solid $color-border-light;
+    padding: $spacing-md $spacing-lg;
+  }
+}
+
+// --- Tag ---
+.el-tag {
+  border-radius: $radius-sm !important;
+  font-weight: 500;
+}
+
+// --- Switch ---
+.el-switch.is-checked .el-switch__core {
+  border-color: $color-primary;
+  background-color: $color-primary;
+}
+
+// --- Icon ---
+.el-icon-video-play,
+.el-icon-video-pause {
   font-size: 18px !important;
 }
 
+// --- Popover / Tooltip ---
 .is-light {
-  border: 1px solid #e4e7ed !important;
-  color: #595959;
-  font-size: 14px;
-  background: #fafcfe !important;
+  border: 1px solid $color-border !important;
+  border-radius: $radius-sm !important;
+  box-shadow: $shadow-md !important;
+  color: $color-text-regular;
+  font-size: $font-size-base;
+  background: $color-bg-white !important;
   .popper__arrow {
-    border-top-color: #e4e7ed !important;
-   }
+    border-top-color: $color-border !important;
+  }
+}
+
+// --- Pagination ---
+.el-pagination {
+  .el-pager li.active {
+    background: $color-primary !important;
+    border-radius: $radius-sm !important;
+  }
+}
+
+// --- Dropdown ---
+.el-dropdown-menu {
+  border-radius: $radius-sm !important;
+  box-shadow: $shadow-lg !important;
+  border: 1px solid $color-border !important;
+}
+
+// --- Select ---
+.el-select-dropdown {
+  border-radius: $radius-sm !important;
+  box-shadow: $shadow-lg !important;
+  border: 1px solid $color-border !important;
+}
+
+// --- Loading ---
+.el-loading-mask {
+  border-radius: $radius-md;
 }

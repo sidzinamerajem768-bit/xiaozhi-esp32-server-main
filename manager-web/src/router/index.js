@@ -7,240 +7,168 @@ const routes = [
   {
     path: '/',
     name: 'welcome',
-    component: function () {
-      return import('../views/login.vue')
-    }
-  },
-  {
-    path: '/role-config',
-    name: 'RoleConfig',
-    component: function () {
-      return import('../views/roleConfig.vue')
-    }
-  },
-  {
-    path: '/voice-print',
-    name: 'VoicePrint',
-    component: function () {
-      return import('../views/VoicePrint.vue')
-    }
+    meta: { title: '登录' },
+    component: () => import(/* webpackChunkName: "auth" */ '../views/login.vue')
   },
   {
     path: '/login',
     name: 'login',
-    component: function () {
-      return import('../views/login.vue')
-    }
-  },
-  {
-    path: '/home',
-    name: 'home',
-    component: function () {
-      return import('../views/home.vue')
-    }
+    meta: { title: '登录' },
+    component: () => import(/* webpackChunkName: "auth" */ '../views/login.vue')
   },
   {
     path: '/register',
     name: 'Register',
-    component: function () {
-      return import('../views/register.vue')
-    }
+    meta: { title: '注册' },
+    component: () => import(/* webpackChunkName: "auth" */ '../views/register.vue')
   },
   {
     path: '/retrieve-password',
     name: 'RetrievePassword',
-    component: function () {
-      return import('../views/retrievePassword.vue')
-    }
+    meta: { title: '找回密码' },
+    component: () => import(/* webpackChunkName: "auth" */ '../views/retrievePassword.vue')
   },
-  // 设备管理页面路由
+
+  // ===== 需要登录的路由 =====
+  {
+    path: '/home',
+    name: 'home',
+    meta: { requiresAuth: true, title: '首页' },
+    component: () => import(/* webpackChunkName: "home" */ '../views/home.vue')
+  },
+  {
+    path: '/role-config',
+    name: 'RoleConfig',
+    meta: { requiresAuth: true, title: '角色配置' },
+    component: () => import(/* webpackChunkName: "agent" */ '../views/roleConfig.vue')
+  },
+  {
+    path: '/voice-print',
+    name: 'VoicePrint',
+    meta: { requiresAuth: true, title: '声纹管理' },
+    component: () => import(/* webpackChunkName: "agent" */ '../views/VoicePrint.vue')
+  },
   {
     path: '/device-management',
     name: 'DeviceManagement',
-    component: function () {
-      return import('../views/DeviceManagement.vue')
-    }
+    meta: { requiresAuth: true, title: '设备管理' },
+    component: () => import(/* webpackChunkName: "device" */ '../views/DeviceManagement.vue')
   },
-  // 添加用户管理路由
   {
     path: '/user-management',
     name: 'UserManagement',
-    component: function () {
-      return import('../views/UserManagement.vue')
-    }
+    meta: { requiresAuth: true, title: '用户管理' },
+    component: () => import(/* webpackChunkName: "admin" */ '../views/UserManagement.vue')
   },
   {
     path: '/model-config',
     name: 'ModelConfig',
-    component: function () {
-      return import('../views/ModelConfig.vue')
-    }
+    meta: { requiresAuth: true, title: '模型配置' },
+    component: () => import(/* webpackChunkName: "admin" */ '../views/ModelConfig.vue')
   },
   {
     path: '/params-management',
     name: 'ParamsManagement',
-    component: function () {
-      return import('../views/ParamsManagement.vue')
-    },
-    meta: {
-      requiresAuth: true,
-      title: '参数管理'
-    }
-  },
-  {
-    path: '/knowledge-base-management',
-    name: 'KnowledgeBaseManagement',
-    component: function () {
-      return import('../views/KnowledgeBaseManagement.vue')
-    },
-    meta: {
-      requiresAuth: true,
-      title: '知识库管理'
-    }
-  },
-  {
-    path: '/knowledge-file-upload',
-    name: 'KnowledgeFileUpload',
-    component: function () {
-      return import('../views/KnowledgeFileUpload.vue')
-    },
-    meta: {
-      requiresAuth: true,
-      title: '文档上传管理'
-    }
-  },
-
-  {
-    path: '/server-side-management',
-    name: 'ServerSideManager',
-    component: function () {
-      return import('../views/ServerSideManager.vue')
-    },
-    meta: {
-      requiresAuth: true,
-      title: '服务端管理'
-    }
-  },
-  {
-    path: '/ota-management',
-    name: 'OtaManagement',
-    component: function () {
-      return import('../views/OtaManagement.vue')
-    },
-    meta: {
-      requiresAuth: true,
-      title: 'OTA管理'
-    }
-  },
-  {
-    path: '/voice-resource-management',
-    name: 'VoiceResourceManagement',
-    component: function () {
-      return import('../views/VoiceResourceManagement.vue')
-    },
-    meta: {
-      requiresAuth: true,
-      title: '音色资源开通'
-    }
-  },
-  {
-    path: '/voice-clone-management',
-    name: 'VoiceCloneManagement',
-    component: function () {
-      return import('../views/VoiceCloneManagement.vue')
-    },
-    meta: {
-      requiresAuth: true,
-      title: '音色克隆管理'
-    }
+    meta: { requiresAuth: true, title: '参数管理' },
+    component: () => import(/* webpackChunkName: "admin" */ '../views/ParamsManagement.vue')
   },
   {
     path: '/dict-management',
     name: 'DictManagement',
-    component: function () {
-      return import('../views/DictManagement.vue')
-    }
+    meta: { requiresAuth: true, title: '字典管理' },
+    component: () => import(/* webpackChunkName: "admin" */ '../views/DictManagement.vue')
   },
   {
     path: '/provider-management',
     name: 'ProviderManagement',
-    component: function () {
-      return import('../views/ProviderManagement.vue')
-    }
+    meta: { requiresAuth: true, title: '提供商管理' },
+    component: () => import(/* webpackChunkName: "admin" */ '../views/ProviderManagement.vue')
   },
-  // 添加默认角色管理路由
+  {
+    path: '/knowledge-base-management',
+    name: 'KnowledgeBaseManagement',
+    meta: { requiresAuth: true, title: '知识库管理' },
+    component: () => import(/* webpackChunkName: "knowledge" */ '../views/KnowledgeBaseManagement.vue')
+  },
+  {
+    path: '/knowledge-file-upload',
+    name: 'KnowledgeFileUpload',
+    meta: { requiresAuth: true, title: '文档上传管理' },
+    component: () => import(/* webpackChunkName: "knowledge" */ '../views/KnowledgeFileUpload.vue')
+  },
+  {
+    path: '/server-side-management',
+    name: 'ServerSideManager',
+    meta: { requiresAuth: true, title: '服务端管理' },
+    component: () => import(/* webpackChunkName: "admin" */ '../views/ServerSideManager.vue')
+  },
+  {
+    path: '/ota-management',
+    name: 'OtaManagement',
+    meta: { requiresAuth: true, title: 'OTA管理' },
+    component: () => import(/* webpackChunkName: "admin" */ '../views/OtaManagement.vue')
+  },
+  {
+    path: '/voice-resource-management',
+    name: 'VoiceResourceManagement',
+    meta: { requiresAuth: true, title: '音色资源开通' },
+    component: () => import(/* webpackChunkName: "voice" */ '../views/VoiceResourceManagement.vue')
+  },
+  {
+    path: '/voice-clone-management',
+    name: 'VoiceCloneManagement',
+    meta: { requiresAuth: true, title: '音色克隆管理' },
+    component: () => import(/* webpackChunkName: "voice" */ '../views/VoiceCloneManagement.vue')
+  },
   {
     path: '/agent-template-management',
     name: 'AgentTemplateManagement',
-    component: function () {
-      return import('../views/AgentTemplateManagement.vue')
-    }
+    meta: { requiresAuth: true, title: '智能体模板管理' },
+    component: () => import(/* webpackChunkName: "agent" */ '../views/AgentTemplateManagement.vue')
   },
-  // 添加模板快速配置路由
   {
     path: '/template-quick-config',
     name: 'TemplateQuickConfig',
-    component: function () {
-      return import('../views/TemplateQuickConfig.vue')
-    }
+    meta: { requiresAuth: true, title: '模板快速配置' },
+    component: () => import(/* webpackChunkName: "agent" */ '../views/TemplateQuickConfig.vue')
   },
-  // 功能配置页面路由
   {
     path: '/feature-management',
     name: 'FeatureManagement',
-    component: function () {
-      return import('../views/FeatureManagement.vue')
-    },
-    meta: {
-      requiresAuth: true,
-      title: '功能配置'
-    }
+    meta: { requiresAuth: true, title: '功能配置' },
+    component: () => import(/* webpackChunkName: "admin" */ '../views/FeatureManagement.vue')
   },
-  // 替换词管理
   {
     path: '/replacement-word-management',
     name: 'ReplacementWordManagement',
-    component: function () {
-      return import('../views/ReplacementWordManagement.vue')
-    },
-    meta: {
-      requiresAuth: true,
-      title: '替换词管理'
-    }
-  },
+    meta: { requiresAuth: true, title: '替换词管理' },
+    component: () => import(/* webpackChunkName: "admin" */ '../views/ReplacementWordManagement.vue')
+  }
 ]
+
 const router = new VueRouter({
   base: process.env.VUE_APP_PUBLIC_PATH || '/',
   routes
 })
 
-// 全局处理重复导航，改为刷新页面
+// 处理重复导航
 const originalPush = VueRouter.prototype.push
 VueRouter.prototype.push = function push(location) {
   return originalPush.call(this, location).catch(err => {
     if (err.name === 'NavigationDuplicated') {
-      // 如果是重复导航，刷新页面
       window.location.reload()
     } else {
-      // 其他错误正常抛出
       throw err
     }
   })
 }
 
-// 需要登录才能访问的路由
-const protectedRoutes = ['home', 'RoleConfig', 'DeviceManagement', 'UserManagement', 'ModelConfig', 'KnowledgeBaseManagement', 'KnowledgeFileUpload']
-
-// 路由守卫
+// 路由守卫：基于 meta.requiresAuth 进行鉴权
 router.beforeEach((to, from, next) => {
-  // 检查是否是需要保护的路由
-  if (protectedRoutes.includes(to.name)) {
-    // 从localStorage获取token
+  if (to.meta && to.meta.requiresAuth) {
     const token = localStorage.getItem('token')
     if (!token) {
-      // 未登录，跳转到登录页
-      next({ name: 'login', query: { redirect: to.fullPath } })
-      return
+      return next({ name: 'login', query: { redirect: to.fullPath } })
     }
   }
   next()

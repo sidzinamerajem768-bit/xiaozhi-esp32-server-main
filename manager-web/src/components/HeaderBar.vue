@@ -618,12 +618,14 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import '@/styles/variables.scss';
+
 .header {
-  background: #f6fcfe66;
-  border: 1px solid #fff;
-  height: 63px !important;
-  min-width: 900px;
-  /* 设置最小宽度防止过度压缩 */
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid $color-border;
+  height: $header-height !important;
+  min-width: $min-page-width;
   overflow: visible;
 }
 
@@ -632,7 +634,7 @@ export default {
   justify-content: space-between;
   align-items: center;
   height: 100%;
-  padding: 0 10px;
+  padding: 0 20px;
 }
 
 .header-left {
@@ -644,18 +646,18 @@ export default {
 }
 
 .logo-img {
-  width: 42px;
-  height: 42px;
+  width: 36px;
+  height: 36px;
 }
 
 .brand-img {
-  height: 20px;
+  height: 18px;
 }
 
 .header-center {
   display: flex;
   align-items: center;
-  gap: 25px;
+  gap: 8px;
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
@@ -664,46 +666,47 @@ export default {
 .header-right {
   display: flex;
   align-items: center;
-  gap: 7px;
-  min-width: 300px;
+  gap: 12px;
+  min-width: 200px;
   justify-content: flex-end;
 }
 
 .equipment-management {
-  height: 30px;
-  border-radius: 15px;
-  background: #deeafe;
+  height: 34px;
+  border-radius: $radius-md;
+  background: $color-bg;
   display: flex;
   justify-content: center;
-  font-size: 14px;
+  font-size: $font-size-sm;
   font-weight: 500;
-  gap: 7px;
-  color: #3d4566;
-  margin-left: 1px;
+  gap: 6px;
+  color: $color-text-regular;
   align-items: center;
-  transition: all 0.3s ease;
+  transition: all $transition-normal;
   cursor: pointer;
   flex-shrink: 0;
-  /* 防止导航按钮被压缩 */
-  padding: 0 15px;
+  padding: 0 14px;
   position: relative;
-}
 
-.equipment-management.active-tab {
-  background: #5778ff !important;
-  color: #fff !important;
-}
+  &:hover {
+    background: $color-primary-bg;
+    color: $color-primary;
+  }
 
-.equipment-management img {
-  width: 15px;
-  height: 13px;
+  &.active-tab {
+    background: $color-primary !important;
+    color: #fff !important;
+  }
+
+  img {
+    width: 16px;
+    height: 14px;
+  }
 }
 
 .search-container {
-  margin-right: 5px;
-  flex: 0.9;
-  min-width: 60px;
-  max-width: none;
+  flex: 0.8;
+  min-width: 120px;
 }
 
 .search-wrapper {
@@ -715,12 +718,12 @@ export default {
   top: 100%;
   left: 0;
   right: 0;
-  background: white;
-  border: 1px solid #e4e6ef;
-  border-radius: 4px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  background: $color-bg-white;
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
+  box-shadow: $shadow-md;
   z-index: 1000;
-  margin-top: 2px;
+  margin-top: 4px;
 }
 
 .search-history-header {
@@ -728,20 +731,20 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 8px 12px;
-  border-bottom: 1px solid #f0f0f0;
-  font-size: 12px;
-  color: #909399;
+  border-bottom: 1px solid $color-border-light;
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
 }
 
 .clear-history-btn {
-  color: #909399;
-  font-size: 11px;
+  color: $color-text-secondary;
+  font-size: $font-size-xs;
   padding: 0;
   height: auto;
-}
 
-.clear-history-btn:hover {
-  color: #606266;
+  &:hover {
+    color: $color-text-regular;
+  }
 }
 
 .search-history-list {
@@ -755,74 +758,90 @@ export default {
   align-items: center;
   padding: 8px 12px;
   cursor: pointer;
-  font-size: 12px;
-  color: #606266;
-}
+  font-size: $font-size-xs;
+  color: $color-text-regular;
+  transition: background $transition-fast;
 
-.search-history-item:hover {
-  background-color: #f5f7fa;
+  &:hover {
+    background: $color-bg;
+
+    .clear-item-icon {
+      visibility: visible;
+    }
+  }
 }
 
 .clear-item-icon {
   font-size: 10px;
-  color: #909399;
+  color: $color-text-secondary;
   visibility: hidden;
+
+  &:hover {
+    color: $color-danger;
+  }
 }
+
 .more-dropdown {
   padding: 0;
-}
-.more-dropdown .el-dropdown-link {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  height: 100%;
-  padding: 0 15px;
+
+  .el-dropdown-link {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 100%;
+    padding: 0 14px;
+  }
 }
 
-.search-history-item:hover .clear-item-icon {
-  visibility: visible;
-}
-
-.clear-item-icon:hover {
-  color: #ff4949;
-}
-
-.custom-search-input>>>.el-input__inner {
-  height: 18px;
-  border-radius: 9px;
-  background-color: #fff;
-  border: 1px solid #e4e6ef;
-  padding-left: 8px;
-  font-size: 9px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+.custom-search-input ::v-deep .el-input__inner {
+  height: 32px;
+  border-radius: $radius-md;
+  background: $color-bg;
+  border: 1px solid $color-border;
+  padding-left: 12px;
+  font-size: $font-size-sm;
+  box-shadow: none;
   width: 100%;
+  transition: all $transition-fast;
+
+  &:focus {
+    background: $color-bg-white;
+    border-color: $color-primary;
+    box-shadow: 0 0 0 2px rgba($color-primary, 0.1);
+  }
 }
 
 .search-icon {
   cursor: pointer;
-  color: #909399;
-  margin-right: 3px;
-  font-size: 9px;
-  line-height: 18px;
-}
+  color: $color-text-secondary;
+  font-size: $font-size-base;
+  line-height: 32px;
 
-.custom-search-input::v-deep .el-input__suffix-inner {
-  display: flex;
-  align-items: center;
-  height: 100%;
+  &:hover {
+    color: $color-primary;
+  }
 }
 
 .avatar-img {
-  width: 21px;
-  height: 21px;
+  width: 28px;
+  height: 28px;
+  border-radius: $radius-round;
   flex-shrink: 0;
   cursor: pointer;
-}
-.el-user-dropdown {
-  cursor: pointer;
+  transition: transform $transition-fast;
+
+  &:hover {
+    transform: scale(1.1);
+  }
 }
 
-/* 导航文本样式 - 支持中英文换行 */
+.el-user-dropdown {
+  cursor: pointer;
+  font-size: $font-size-sm;
+  color: $color-text-regular;
+  font-weight: 500;
+}
+
 .nav-text {
   white-space: normal;
   text-align: center;
@@ -830,44 +849,22 @@ export default {
   line-height: 1.2;
 }
 
-/* 响应式调整 */
-@media (max-width: 1200px) {
-  .header-center {
-    gap: 14px;
-  }
-
-  .equipment-management {
-    min-width: 80px;
-    font-size: 10px;
-  }
-}
-
-.equipment-management.more-dropdown {
-  position: relative;
-}
-
-.equipment-management.more-dropdown .el-dropdown-menu {
-  position: absolute;
-  right: 0;
-  min-width: 120px;
-  margin-top: 5px;
-}
-
-.el-dropdown-menu__item {
-  min-width: 60px;
-  padding: 8px 20px;
-  font-size: 14px;
-  color: #606266;
-  white-space: nowrap;
-}
-
-/* 添加倒三角旋转样式 */
 .rotate-down {
   transform: rotate(180deg);
-  transition: transform 0.3s ease;
+  transition: transform $transition-normal;
 }
 
 .el-icon-arrow-down {
-  transition: transform 0.3s ease;
+  transition: transform $transition-normal;
+}
+
+@media (max-width: 1200px) {
+  .header-center {
+    gap: 6px;
+  }
+  .equipment-management {
+    font-size: 11px;
+    padding: 0 10px;
+  }
 }
 </style>

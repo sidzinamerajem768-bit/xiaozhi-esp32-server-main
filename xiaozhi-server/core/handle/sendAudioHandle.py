@@ -331,10 +331,10 @@ async def send_stt_message(conn: "ConnectionHandler", text):
 
 
 async def send_display_message(conn: "ConnectionHandler", text):
-    """发送纯显示消息"""
+    """发送 display 字幕消息（设备端 type=display 分支处理）"""
     message = {
-        "type": "stt",
-        "text": text,
+        "type": "display",
+        "text": textUtils.check_emoji(text),
         "session_id": conn.session_id
     }
     await conn.websocket.send(json.dumps(message))

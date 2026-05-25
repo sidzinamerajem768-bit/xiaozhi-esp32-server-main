@@ -5,28 +5,23 @@ if TYPE_CHECKING:
     from core.connection import ConnectionHandler
 
 TAG = __name__
+
+EMOTION_TO_VIDEO = {
+    "neutral": "idle",
+    "idle": "idle",
+    "nod": "nod",
+    "smile": "smile",
+    "squint": "squint",
+    "tears": "tears",
+}
+
 EMOJI_MAP = {
-    "😂": "funny",
-    "😭": "crying",
-    "😠": "angry",
-    "😔": "sad",
-    "😍": "loving",
-    "😲": "surprised",
-    "😱": "shocked",
-    "🤔": "thinking",
-    "😌": "relaxed",
-    "😴": "sleepy",
-    "😜": "silly",
-    "🙄": "confused",
     "😶": "neutral",
-    "🙂": "happy",
-    "😆": "laughing",
-    "😳": "embarrassed",
-    "😉": "winking",
-    "😎": "cool",
-    "🤤": "delicious",
-    "😘": "kissy",
-    "😏": "confident",
+    "😌": "idle",
+    "🫡": "nod",
+    "😊": "smile",
+    "😆": "squint",
+    "😭": "tears",
 }
 EMOJI_RANGES = [
     (0x1F600, 0x1F64F),
@@ -83,13 +78,14 @@ def is_punctuation_or_emoji(char):
 
 async def get_emotion(conn: "ConnectionHandler", text):
     """获取文本内的情绪消息"""
-    emoji = "🙂"
-    emotion = "happy"
+    emoji = "😶"
+    emotion = "neutral"
     for char in text:
         if char in EMOJI_MAP:
             emoji = char
             emotion = EMOJI_MAP[char]
             break
+    video = EMOTION_TO_VIDEO.get(emotion, "idle")
     try:
         await conn.websocket.send(
             json.dumps(
@@ -97,6 +93,7 @@ async def get_emotion(conn: "ConnectionHandler", text):
                     "type": "llm",
                     "text": emoji,
                     "emotion": emotion,
+                    "video": video,
                     "session_id": conn.session_id,
                 }
             )

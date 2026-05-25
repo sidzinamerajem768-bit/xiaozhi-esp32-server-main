@@ -170,6 +170,12 @@ router.beforeEach((to, from, next) => {
     if (!token) {
       return next({ name: 'login', query: { redirect: to.fullPath } })
     }
+    // 普通用户重定向到用户端
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
+    if (!userInfo.superAdmin) {
+      window.location.href = '/user-portal/'
+      return
+    }
   }
   next()
 })

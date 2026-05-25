@@ -104,15 +104,18 @@ class LLMProvider(LLMProviderBase):
                         if evt == "workflow_finished":
                             status = data.get("status", "")
                             outputs = data.get("outputs", {})
-                            answer = outputs.get("answer", "") or outputs.get("text", "") or outputs.get("output", "")
-                            logger.bind(tag=TAG).info(f"[LLM-DIFY-WF] finished status={status} outputs_keys={list(outputs.keys()) if outputs else 'none'} answer_len={len(answer)}")
+                            display_text = outputs.get("display", "")
+                            tts_text = outputs.get("text", "") or outputs.get("answer", "") or outputs.get("output", "")
+                            logger.bind(tag=TAG).info(f"[LLM-DIFY-WF] finished status={status} outputs_keys={list(outputs.keys()) if outputs else 'none'} display_len={len(display_text)} text_len={len(tts_text)}")
                             if status == "succeeded":
-                                if answer:
-                                    yield answer
-                                else:
-                                    yield "【服务响应异常：工作流完成但无输出】"
+                                if display_text:
+                                    yield ("display", display_text)
+                                if tts_text:
+                                    yield ("tts", tts_text)
+                                if not display_text and not tts_text:
+                                    yield ("tts", "【服务响应异常：工作流完成但无输出】")
                             else:
-                                yield "【服务响应异常】"
+                                yield ("tts", "【服务响应异常】")
                 logger.bind(tag=TAG).debug(f"[LLM-DIFY-WF] total_lines={wf_line_count}")
             elif api_mode == "completion-messages":
                 for line in r.iter_lines():

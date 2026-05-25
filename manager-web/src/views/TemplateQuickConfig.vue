@@ -81,7 +81,7 @@ export default {
   data() {
     return {
       form: {
-        agentCode: "小智",
+        agentCode: "星枢",
         agentName: "",
         systemPrompt: "",
         sort: 0,

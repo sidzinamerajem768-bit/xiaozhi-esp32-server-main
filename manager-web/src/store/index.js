@@ -30,6 +30,9 @@ export default new Vuex.Store({
     },
     getPubConfig(state) {
       return state.pubConfig
+    },
+    isSuperAdmin(state) {
+      return state.userInfo && state.userInfo.superAdmin === true
     }
   },
   mutations: {

@@ -170,12 +170,9 @@
 
 <script>
 import Api from '@/apis/api';
-import i18n from '@/i18n';
 import featureManager from '@/utils/featureManager';
 
 export default {
-  i18n,
-
   props: {
     value: Boolean,
     functions: {

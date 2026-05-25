@@ -9,8 +9,7 @@
             margin-left: 11px;
             gap: 10px;
           ">
-          <img loading="lazy" alt="" src="@/assets/xiaozhi-logo.png" style="width: 42px; height: 42px" />
-          <img loading="lazy" alt="" :src="xiaozhiAiIcon" style="height: 20px" />
+          <span style="font-size: 22px; font-weight: 700; color: #4f6ef7;">{{ $t('system.name') }}</span>
         </div>
       </el-header>
       <div class="login-person">
@@ -31,35 +30,6 @@
             <div class="login-welcome">
               {{ $t("login.welcome") }}
             </div>
-
-            <!-- 语言切换下拉菜单 -->
-            <el-dropdown trigger="click" class="title-language-dropdown"
-              @visible-change="handleLanguageDropdownVisibleChange">
-              <span class="el-dropdown-link">
-                <span class="current-language-text">{{ currentLanguageText }}</span>
-                <i class="el-icon-arrow-down el-icon--right" :class="{ 'rotate-down': languageDropdownVisible }"></i>
-              </span>
-              <el-dropdown-menu slot="dropdown">
-                <el-dropdown-item @click.native="changeLanguage('zh_CN')">
-                  {{ $t("language.zhCN") }}
-                </el-dropdown-item>
-                <el-dropdown-item @click.native="changeLanguage('zh_TW')">
-                  {{ $t("language.zhTW") }}
-                </el-dropdown-item>
-                <el-dropdown-item @click.native="changeLanguage('en')">
-                  {{ $t("language.en") }}
-                </el-dropdown-item>
-                <el-dropdown-item @click.native="changeLanguage('de')">
-                  {{ $t("language.de") }}
-                </el-dropdown-item>
-                <el-dropdown-item @click.native="changeLanguage('vi')">
-                  {{ $t("language.vi") }}
-                </el-dropdown-item>
-                <el-dropdown-item @click.native="changeLanguage('pt_BR')">
-                  {{ $t("language.ptBR") }}
-                </el-dropdown-item>
-              </el-dropdown-menu>
-            </el-dropdown>
           </div>
           <div style="padding: 0 30px">
             <!-- 用户名登录 -->
@@ -156,7 +126,6 @@
 <script>
 import Api from "@/apis/api";
 import VersionFooter from "@/components/VersionFooter.vue";
-import i18n, { changeLanguage } from "@/i18n";
 import { getUUID, goToPage, showDanger, showSuccess, sm2Encrypt, validateMobile } from "@/utils";
 import { mapState } from "vuex";
 import featureManager from "@/utils/featureManager";
@@ -173,48 +142,6 @@ export default {
       mobileAreaList: (state) => state.pubConfig.mobileAreaList,
       sm2PublicKey: (state) => state.pubConfig.sm2PublicKey,
     }),
-    // 获取当前语言
-    currentLanguage() {
-      return i18n.locale || "zh_CN";
-    },
-    // 获取当前语言显示文本
-    currentLanguageText() {
-      const currentLang = this.currentLanguage;
-      switch (currentLang) {
-        case "zh_CN":
-          return this.$t("language.zhCN");
-        case "zh_TW":
-          return this.$t("language.zhTW");
-        case "en":
-          return this.$t("language.en");
-        case "de":
-          return this.$t("language.de");
-        case "vi":
-          return this.$t("language.vi");
-        case "pt_BR":
-          return this.$t("language.ptBR");
-        default:
-          return this.$t("language.zhCN");
-      }
-    },
-    // 根据当前语言获取对应的xiaozhi-ai图标
-    xiaozhiAiIcon() {
-      const currentLang = this.currentLanguage;
-      switch (currentLang) {
-        case "zh_CN":
-          return require("@/assets/xiaozhi-ai.png");
-        case "zh_TW":
-          return require("@/assets/xiaozhi-ai_zh_TW.png");
-        case "en":
-          return require("@/assets/xiaozhi-ai_en.png");
-        case "de":
-          return require("@/assets/xiaozhi-ai_de.png");
-        case "vi":
-          return require("@/assets/xiaozhi-ai_vi.png");
-        default:
-          return require("@/assets/xiaozhi-ai.png");
-      }
-    },
   },
   data() {
     return {
@@ -230,7 +157,6 @@ export default {
       captchaUuid: "",
       captchaUrl: "",
       isMobileLogin: false,
-      languageDropdownVisible: false,
     };
   },
   mounted() {
@@ -242,10 +168,6 @@ export default {
   },
   methods: {
     openPage(url) {
-      const lang = this.$i18n ? this.$i18n.locale : 'zh_CN';
-      if (!lang.startsWith('zh')) {
-        url = url.replace('.html', '-en.html');
-      }
       window.open(url, '_blank');
     },
     fetchCaptcha() {
@@ -267,21 +189,6 @@ export default {
           }
         });
       }
-    },
-
-    // 切换语言下拉菜单的可见状态变化
-    handleLanguageDropdownVisibleChange(visible) {
-      this.languageDropdownVisible = visible;
-    },
-
-    // 切换语言
-    changeLanguage(lang) {
-      changeLanguage(lang);
-      this.languageDropdownVisible = false;
-      this.$message.success({
-        message: this.$t("message.success"),
-        showClose: true,
-      });
     },
 
     // 切换登录方式
@@ -308,7 +215,12 @@ export default {
       Api.user.getUserInfo(({ data }) => {
         if (data.code === 0) {
           this.$store.commit("setUserInfo", data.data);
-          goToPage("/home");
+          // 根据角色跳转：管理员 → 管理端，普通用户 → 用户端
+          if (data.data.superAdmin) {
+            goToPage("/home");
+          } else {
+            window.location.href = '/user-portal/';
+          }
         } else {
           showDanger("用户信息获取失败");
         }

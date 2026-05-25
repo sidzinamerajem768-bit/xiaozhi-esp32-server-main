@@ -44,7 +44,6 @@ import Api from "@/apis/api";
 import HeaderBar from "@/components/HeaderBar.vue";
 import ParamDialog from "@/components/ParamDialog.vue";
 import VersionFooter from "@/components/VersionFooter.vue";
-import i18n from '@/i18n';
 
 export default {
   components: { HeaderBar, ParamDialog, VersionFooter },

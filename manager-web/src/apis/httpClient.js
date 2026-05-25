@@ -5,8 +5,7 @@
 import Fly from 'flyio/dist/npm/fly'
 import store from '../store/index'
 import Constant from '../utils/constant'
-import { goToPage, showDanger, showWarning } from '../utils/index'
-import i18n from '../i18n/index'
+import { goToPage, showDanger } from '../utils/index'
 
 const fly = new Fly()
 fly.config.timeout = 30000
@@ -15,8 +14,7 @@ fly.config.timeout = 30000
 
 fly.interceptors.request.use((config) => {
   // 语言头
-  const lang = (i18n.locale || 'zh_CN').replace('_', '-')
-  config.headers['Accept-Language'] = lang === 'en' ? 'en-US' : lang
+  config.headers['Accept-Language'] = 'zh-CN'
 
   // Token
   const token = store.getters.getToken

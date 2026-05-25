@@ -63,7 +63,7 @@
               </div>
               <div class="custom-pagination">
                 <el-select v-model="pageSize" @change="handlePageSizeChange"
-                  :class="['page-size-select', { 'page-size-select-en': $i18n.locale === 'en' }]">
+                  :class="'page-size-select'">
                   <el-option v-for="item in pageSizeOptions" :key="item"
                     :label="$t('modelConfig.itemsPerPage', { items: item })" :value="item">
                   </el-option>
@@ -101,7 +101,6 @@ import Api from "@/apis/api";
 import HeaderBar from "@/components/HeaderBar.vue";
 import VersionFooter from "@/components/VersionFooter.vue";
 import ViewPasswordDialog from "@/components/ViewPasswordDialog.vue";
-import i18n from '@/i18n';
 export default {
   components: { HeaderBar, ViewPasswordDialog, VersionFooter },
   data() {

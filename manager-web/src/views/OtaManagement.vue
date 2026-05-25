@@ -110,7 +110,6 @@ import FirmwareDialog from "@/components/FirmwareDialog.vue";
 import HeaderBar from "@/components/HeaderBar.vue";
 import VersionFooter from "@/components/VersionFooter.vue";
 import { formatDate, formatFileSize } from "@/utils/format";
-import i18n from '@/i18n';
 
 export default {
     components: { HeaderBar, FirmwareDialog, VersionFooter },

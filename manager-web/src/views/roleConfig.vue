@@ -471,7 +471,6 @@ import FunctionDialog from "@/components/FunctionDialog.vue";
 import ContextProviderDialog from "@/components/ContextProviderDialog.vue";
 import TtsAdvancedSettings from "@/components/TtsAdvancedSettings.vue";
 import HeaderBar from "@/components/HeaderBar.vue";
-import i18n from "@/i18n";
 import featureManager from "@/utils/featureManager"; 
 import VersionFooter from "@/components/VersionFooter.vue";
 
@@ -605,12 +604,12 @@ export default {
       Api.agent.updateAgentConfig(this.$route.query.agentId, configData, ({ data }) => {
         if (data.code === 0) {
           this.$message.success({
-            message: i18n.t("roleConfig.saveSuccess"),
+            message: this.$t("roleConfig.saveSuccess"),
             showClose: true,
           });
         } else {
           this.$message.error({
-            message: data.msg || i18n.t("roleConfig.saveFailed"),
+            message: data.msg || this.$t("roleConfig.saveFailed"),
             showClose: true,
           });
         }
@@ -618,9 +617,9 @@ export default {
       
     },
     resetConfig() {
-      this.$confirm(i18n.t("roleConfig.confirmReset"), i18n.t("message.info"), {
-        confirmButtonText: i18n.t("button.ok"),
-        cancelButtonText: i18n.t("button.cancel"),
+      this.$confirm(this.$t("roleConfig.confirmReset"), this.$t("message.info"), {
+        confirmButtonText: this.$t("button.ok"),
+        cancelButtonText: this.$t("button.cancel"),
         type: "warning",
       })
         .then(() => {
@@ -648,7 +647,7 @@ export default {
           this.dynamicTags = [];
           this.currentFunctions = [];
           this.$message.success({
-            message: i18n.t("roleConfig.resetSuccess"),
+            message: this.$t("roleConfig.resetSuccess"),
             showClose: true,
           });
         })
@@ -659,7 +658,7 @@ export default {
         if (data.code === 0) {
           this.templates = data.data;
         } else {
-          this.$message.error(data.msg || i18n.t("roleConfig.fetchTemplatesFailed"));
+          this.$message.error(data.msg || this.$t("roleConfig.fetchTemplatesFailed"));
         }
       });
     },
@@ -669,12 +668,12 @@ export default {
       try {
         this.applyTemplateData(template);
         this.$message.success({
-          message: `${template.agentName}${i18n.t("roleConfig.templateApplied")}`,
+          message: `${template.agentName}${this.$t("roleConfig.templateApplied")}`,
           showClose: true,
         });
       } catch (error) {
         this.$message.error({
-          message: i18n.t("roleConfig.applyTemplateFailed"),
+          message: this.$t("roleConfig.applyTemplateFailed"),
           showClose: true,
         });
         console.error("应用模板失败:", error);
@@ -765,7 +764,7 @@ export default {
             this.updateIntentOptionsVisibility();
           });
         } else {
-          this.$message.error(data.msg || i18n.t("roleConfig.fetchConfigFailed"));
+          this.$message.error(data.msg || this.$t("roleConfig.fetchConfigFailed"));
         }
       });
     },
@@ -789,7 +788,7 @@ export default {
                 this.updateIntentOptionsVisibility();
               }
             } else {
-              this.$message.error(data.msg || i18n.t("roleConfig.fetchModelsFailed"));
+              this.$message.error(data.msg || this.$t("roleConfig.fetchModelsFailed"));
             }
           });
         } else {
@@ -959,7 +958,7 @@ export default {
             });
             resolve();
           } else {
-            this.$message.error(data.msg || i18n.t("roleConfig.fetchPluginsFailed"));
+            this.$message.error(data.msg || this.$t("roleConfig.fetchPluginsFailed"));
             reject();
           }
         });

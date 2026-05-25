@@ -190,3 +190,5 @@ uploadfile
 !manager-mobile/**/.env*
 !manager-mobile/**/*.json
 !xiaozhi-server/**/*.json
+/user-portal/**/*.json
+/user-portal/**/node_modules

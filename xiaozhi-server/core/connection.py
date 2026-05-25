@@ -26,6 +26,7 @@ from core.utils.modules_initialize import (
     initialize_asr,
 )
 from core.handle.reportHandle import report, enqueue_tool_report
+from core.handle.sendAudioHandle import send_display_message
 from core.providers.tts.default import DefaultTTS
 from concurrent.futures import ThreadPoolExecutor
 from core.utils.dialogue import Message, Dialogue
@@ -1041,7 +1042,11 @@ class ConnectionHandler:
                                             )
                                         )
                 else:
-                    content = response
+                    _resp_type = None
+                    if isinstance(response, tuple) and len(response) == 2:
+                        _resp_type, content = response
+                    else:
+                        content = response
 
                 # 在llm回复中获取情绪表情，一轮对话只在开头获取一次
                 if emotion_flag and content is not None and content.strip():
@@ -1053,7 +1058,17 @@ class ConnectionHandler:
                     emotion_flag = False
 
                 if content is not None and len(content) > 0:
-                    if not tool_call_flag:
+                    if _resp_type == "display":
+                        response_message.append(content)
+                        # 延迟发送 display 字幕消息，避免 JSON 解析+UI 渲染
+                        # 阻塞 ESP32 单线程导致 TTS 音频头部数据被丢弃
+                        self.loop.call_later(
+                            0.3,
+                            lambda c=content: asyncio.ensure_future(
+                                send_display_message(self, c)
+                            ),
+                        )
+                    elif not tool_call_flag:
                         tts_sent_chars += len(content)
                         response_message.append(content)
                         self.tts.tts_text_queue.put(

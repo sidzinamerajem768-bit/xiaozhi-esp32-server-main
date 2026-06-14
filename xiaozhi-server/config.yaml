@@ -598,7 +598,19 @@ ASR:
     # 热词定制文档地址：https://help.aliyun.com/zh/model-studio/custom-hot-words?
     # vocabulary_id: vocab-xxx-24ee19fa8cfb4d52902170a0xxxxxxxx  # 热词ID(可选)
     # language_hints: ["zh", "en"]  # 指定语言(可选)，支持zh、en、ja、yue、ko、de、fr、ru
-    output_dir: tmp/  
+    output_dir: tmp/
+  CozeStreamASR:
+    # Coze 双向流式语音对话 - ASR 部分
+    # 与 CozeStreamTTS 配合使用，共享同一个 WebSocket 连接完成 ASR+LLM+TTS 全链路
+    # 文档: https://docs.coze.cn/dev_how_to_guides/websocket_openapi
+    type: coze_stream
+    # 个人访问令牌 https://www.coze.cn/open/oauth/pats
+    access_token: 你的coze个人令牌
+    # 智能体 ID
+    bot_id: "你的bot_id"
+    # 用户 ID（可选，默认自动生成）
+    user_id: "你的user_id"
+    output_dir: tmp/
 VAD:
   SileroVAD:
     type: silero
@@ -879,6 +891,19 @@ TTS:
     # 以下可不用设置，使用默认设置
     # speed: 1  # 语速：-0.5到2
     # loudness_rate: 0  # 音量：-50到100
+  CozeStreamTTS:
+    # Coze 双向流式语音对话 - TTS 部分
+    # 通过 WebSocket 一次连接完成 ASR + LLM + TTS 全链路（需配合 CozeStreamASR 使用）
+    # 文档: https://docs.coze.cn/dev_how_to_guides/websocket_openapi
+    type: coze_stream
+    # 个人访问令牌（应与 CozeStreamASR 保持一致）
+    access_token: 你的coze个人令牌
+    # 智能体 ID（应与 CozeStreamASR 保持一致）
+    bot_id: "你的bot_id"
+    # TTS 音色 ID（可选，不填则使用智能体默认音色）
+    # 音色列表: https://docs.coze.cn/dev_how_to_guides/sys_voice
+    voice_id: "7426720361733046281"
+    output_dir: tmp/
   VolcesAiGatewayTTS:
     type: openai
     # 火山引擎 - 边缘大模型网关

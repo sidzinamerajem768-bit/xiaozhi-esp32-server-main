@@ -12,12 +12,23 @@
 
 import asyncio
 import json
+import re
 import traceback
 from typing import Optional, Dict, Any
 
 from ..base import MemoryProviderBase, logger
 
 TAG = __name__
+
+
+def _normalize_base_url(url: str) -> str:
+    """修正 base URL 中常见的配置错误：去除末尾的 /chat/completions 等具体接口路径"""
+    if not url:
+        return url
+    # 去除末尾的 /chat/completions 或 /completions，保留真正的 base URL
+    url = re.sub(r'/chat/completions/?$', '', url)
+    url = re.sub(r'/completions/?$', '', url)
+    return url.rstrip('/')
 
 
 class MemoryProvider(MemoryProviderBase):
@@ -85,11 +96,11 @@ class MemoryProvider(MemoryProviderBase):
                 if llm_provider == "qwen":
                     base_url = config.get("dashscope_base_url") or config.get("llm_base_url")
                     if base_url:
-                        llm_config["dashscope_base_url"] = base_url
+                        llm_config["dashscope_base_url"] = _normalize_base_url(base_url)
                 else:
                     base_url = config.get("openai_base_url") or config.get("llm_base_url")
                     if base_url:
-                        llm_config["openai_base_url"] = base_url
+                        llm_config["openai_base_url"] = _normalize_base_url(base_url)
 
                 powermem_config["llm"] = {
                     "provider": llm_provider,
@@ -112,11 +123,11 @@ class MemoryProvider(MemoryProviderBase):
                 if embedding_provider == "qwen":
                     base_url = config.get("embedding_dashscope_base_url") or config.get("embedding_base_url")
                     if base_url:
-                        embedder_config["dashscope_base_url"] = base_url
+                        embedder_config["dashscope_base_url"] = _normalize_base_url(base_url)
                 else:
                     base_url = config.get("embedding_openai_base_url") or config.get("embedding_base_url")
                     if base_url:
-                        embedder_config["openai_base_url"] = base_url
+                        embedder_config["openai_base_url"] = _normalize_base_url(base_url)
 
                 powermem_config["embedder"] = {
                     "provider": embedding_provider,

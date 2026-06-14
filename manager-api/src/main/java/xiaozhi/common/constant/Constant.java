@@ -7,6 +7,7 @@ import lombok.Getter;
  * Copyright (c) 人人开源 All rights reserved.
  * Website: https://www.renren.io
  */
+
 public interface Constant {
     /**
      * 成功

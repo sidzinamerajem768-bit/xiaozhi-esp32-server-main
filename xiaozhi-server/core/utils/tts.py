@@ -30,10 +30,18 @@ punctuation_set = {
     "~",  # 波浪号
 }
 
+# TTS 类型别名映射：配置中可能使用的旧名称/错误名称 -> 实际模块文件名
+_TTS_TYPE_ALIASES = {
+    "CozeStreamTTS": "coze_stream",
+}
+
+
 def create_instance(class_name, *args, **kwargs):
     # 创建TTS实例
-    if os.path.exists(os.path.join('core', 'providers', 'tts', f'{class_name}.py')):
-        lib_name = f'core.providers.tts.{class_name}'
+    # 先通过别名映射解析实际模块名
+    module_name = _TTS_TYPE_ALIASES.get(class_name, class_name)
+    if os.path.exists(os.path.join('core', 'providers', 'tts', f'{module_name}.py')):
+        lib_name = f'core.providers.tts.{module_name}'
         if lib_name not in sys.modules:
             sys.modules[lib_name] = importlib.import_module(f'{lib_name}')
         return sys.modules[lib_name].TTSProvider(*args, **kwargs)

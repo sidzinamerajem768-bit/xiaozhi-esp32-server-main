@@ -81,17 +81,15 @@ async def startToChat(conn: "ConnectionHandler", text):
         await handleAbortMessage(conn)
 
     # 首先进行意图分析，使用实际文本内容
-    # 延迟统计：确保 asr_end_time 已设置（streaming ASR 可能跳过 base.handle_voice_stop）
-    if conn.asr_end_time <= 0:
-        conn.asr_end_time = time.monotonic()
-
-    intent_start = time.monotonic()
     intent_handled = await handle_user_intent(conn, actual_text)
-    intent_time = time.monotonic() - intent_start
-    conn.logger.bind(tag=TAG).info(f"性能: 意图耗时={intent_time:.3f}s")
 
     if intent_handled:
         # 如果意图已被处理，不再进行聊天
+        return
+
+    # 如果没有配置 LLM（如 CozeStreamASR 全链路模式），
+    # 纯对话由 ASR WebSocket 内部处理，不调 chat()
+    if conn.llm is None:
         return
 
     # 意图未被处理，继续常规聊天流程，使用实际文本内容

@@ -437,6 +437,20 @@ class TTSProvider(TTSProviderBase):
         # 待播放文件列表（对齐 huoshan 显式初始化）
         self.before_stop_play_files: list[Any] = []
 
+        # TTS 延迟统计
+        self._ts_request: float = 0.0   # 收到合成请求
+        self._ts_send: float = 0.0      # 文本发送到 Coze
+        self._ts_first_audio: float = 0.0  # 收到首帧音频
+        self._ts_complete: float = 0.0  # 合成完成
+
+    def reset_stream_state(self) -> None:
+        """重置流式处理状态，包括延迟统计"""
+        super().reset_stream_state()
+        self._ts_request = time.monotonic()
+        self._ts_send = 0.0
+        self._ts_first_audio = 0.0
+        self._ts_complete = 0.0
+
     async def open_audio_channels(self, conn: Any) -> None:
         """打开音频通道，设置回调（对齐 huoshan 错误处理模式）"""
         try:
@@ -458,6 +472,9 @@ class TTSProvider(TTSProviderBase):
           - Opus 直出模式：base64 解码后直接推入 Opus 队列，零缓冲零编码。
           - PCM 模式：缓冲满帧后本地编码为 Opus（对齐 huoshan_double_stream）。
         """
+        # 记录首帧音频到达时间
+        if self._ts_first_audio == 0.0:
+            self._ts_first_audio = time.monotonic()
         if self._use_opus_direct:
             # Opus 直出模式：Coze 输出的已是完整 Opus 帧，直接入队
             self.handle_opus(audio_data)
@@ -505,6 +522,16 @@ class TTSProvider(TTSProviderBase):
             SentenceType.LAST, [], None,
             getattr(self, "current_sentence_id", None)
         ))
+
+        # TTS 延迟统计
+        self._ts_complete = time.monotonic()
+        if self._ts_request > 0:
+            queue_wait = self._ts_send - self._ts_request if self._ts_send > 0 else 0
+            net = self._ts_first_audio - self._ts_send if self._ts_first_audio > 0 else 0
+            total = self._ts_complete - self._ts_request
+            logger.bind(tag=TAG).info(
+                f"TTS延迟: 排队={queue_wait:.3f}s 网络={net:.3f}s 总耗时={total:.3f}s"
+            )
         logger.bind(tag=TAG).debug("TTS completed: 已处理剩余数据、待播放文件并发送 LAST")
 
     def tts_text_priority_thread(self) -> None:
@@ -633,6 +660,7 @@ class TTSProvider(TTSProviderBase):
                     txt_str: str = txt  # type: ignore[assignment]
                     if txt_str and self.stream_manager.ws:
                         await self.stream_manager.send_text(txt_str)  # type: ignore[arg-type]
+                self._ts_send = time.monotonic()
             return
         except Exception as e:
             logger.bind(tag=TAG).error(f"发送TTS文本失败: {str(e)}")
@@ -650,6 +678,10 @@ class TTSProvider(TTSProviderBase):
         if hasattr(self, "opus_encoder") and self.opus_encoder is not None:
             self.opus_encoder.close()
         logger.bind(tag=TAG).info("TTSProvider 资源已全部清理")
+
+    def to_tts_stream(self, text, opus_handler=None) -> None:
+        """Coze 流式 TTS 不需要 base 类处理，音频已通过 stream_manager 回调完成"""
+        pass
 
     def audio_to_opus_data_stream(
         self, audio_file_path: str, callback: Callable[[Any], Any] = None  # type: ignore[assignment]

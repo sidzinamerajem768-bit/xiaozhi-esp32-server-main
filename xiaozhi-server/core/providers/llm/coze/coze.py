@@ -60,26 +60,14 @@ class LLMProvider(LLMProviderBase):
                 yield event.message.content
 
     def response_with_functions(self, session_id, dialogue, functions=None):
-        if len(dialogue) == 2 and functions is not None and len(functions) > 0:
-            # 第一次调用llm， 取最后一条用户消息，附加tool提示词
+        # 动态注入工具列表：每次调用都把当前可用工具注入到最后一条用户消息
+        if functions is not None and len(functions) > 0:
             last_msg = dialogue[-1]["content"]
-            function_str = json.dumps(functions, ensure_ascii=False)
-            modify_msg = get_system_prompt_for_function(function_str) + last_msg
-            dialogue[-1]["content"] = modify_msg
-
-        # 如果最后一个是 role="tool"，附加到user上
-        if len(dialogue) > 1 and dialogue[-1]["role"] == "tool":
-            assistant_msg = (
-                "\n[System] Your initial response before <tool_call> has ALREADY been spoken to the user. "
-                "Do NOT repeat greetings like '好的', '没问题', 'OK' etc. "
-                "Just briefly confirm the result or provide a short status update based on the tool result."
-                "\nTool result: " + dialogue[-1]["content"] + "\n\n"
-            )
-            while len(dialogue) > 1:
-                if dialogue[-1]["role"] == "user":
-                    dialogue[-1]["content"] = assistant_msg + dialogue[-1]["content"]
-                    break
-                dialogue.pop()
+            # 避免重复注入（检查是否已有 TOOL USE 标记）
+            if "TOOL USE" not in last_msg:
+                function_str = json.dumps(functions, ensure_ascii=False)
+                modify_msg = get_system_prompt_for_function(function_str) + last_msg
+                dialogue[-1]["content"] = modify_msg
 
         for token in self.response(session_id, dialogue):
             yield token, None

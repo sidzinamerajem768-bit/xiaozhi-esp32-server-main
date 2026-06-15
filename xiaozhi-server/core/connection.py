@@ -148,7 +148,6 @@ class ConnectionHandler:
         self.first_activity_time = 0.0  # 记录首次活动的时间（毫秒）
         self.last_activity_time = 0.0  # 统一的活动时间戳（毫秒）
         self.vad_last_voice_time = 0.0  # 记录用户最后一次说话的时间（毫秒）
-        self.asr_end_time = 0.0  # ASR 完成时间，用于计算延迟
         self.client_voice_stop = False
         self.last_is_voice = False
 
@@ -918,12 +917,6 @@ class ConnectionHandler:
             current_sentence_id = str(uuid.uuid4().hex)
             self.sentence_id = current_sentence_id  # 更新共享属性
             self.dialogue.put(Message(role="user", content=query))
-            # 性能统计：ASR 结束 → TTS 首句开始
-            if self.asr_end_time > 0:
-                latency = time.monotonic() - self.asr_end_time
-                self.logger.bind(tag=TAG).info(
-                    f"性能: 总延迟={latency:.3f}s"
-                )
             self.tts.tts_text_queue.put(
                 TTSMessageDTO(
                     sentence_id=current_sentence_id,
@@ -978,7 +971,6 @@ class ConnectionHandler:
                 )
                 memory_str = future.result()
 
-            llm_start = time.monotonic()
             if self.intent_type == "function_call" and functions is not None:
                 # 使用支持functions的streaming接口
                 llm_responses = self.llm.response_with_functions(
@@ -1006,9 +998,6 @@ class ConnectionHandler:
         content_arguments = ""
         tts_sent_chars = 0
         emotion_flag = True
-        _first_token_seen = False
-        llm_first_token = 0.0
-        _first_tts_text = False
         try:
             for response in llm_responses:
                 if self.client_abort:
@@ -1070,9 +1059,6 @@ class ConnectionHandler:
                     emotion_flag = False
 
                 if content is not None and len(content) > 0:
-                    if not _first_token_seen:
-                        _first_token_seen = True
-                        llm_first_token = time.monotonic() - llm_start
                     if _resp_type == "display":
                         response_message.append(content)
                         # 延迟发送 display 字幕消息，避免 JSON 解析+UI 渲染
@@ -1089,12 +1075,6 @@ class ConnectionHandler:
                         if "<" in content_arguments:
                             pass  # 等待 tool_call_flag 在循环顶部被设置
                         else:
-                            if not _first_tts_text:
-                                _first_tts_text = True
-                                tts_text_latency = time.monotonic() - llm_start
-                                self.logger.bind(tag=TAG).info(
-                                    f"性能: TTS首文本距LLM开始={tts_text_latency:.3f}s"
-                                )
                             tts_sent_chars += len(content)
                             response_message.append(content)
                             self.tts.tts_text_queue.put(
@@ -1124,14 +1104,6 @@ class ConnectionHandler:
                     )
                 )
             return
-        # 记录 LLM 耗时
-        llm_time = time.monotonic() - llm_start
-        if llm_first_token > 0:
-            self.logger.bind(tag=TAG).info(
-                f"性能: LLM耗时={llm_time:.3f}s (首token={llm_first_token:.3f}s 流式={llm_time - llm_first_token:.3f}s)"
-            )
-        else:
-            self.logger.bind(tag=TAG).info(f"性能: LLM耗时={llm_time:.3f}s")
         # 处理function call
         self.logger.bind(tag=TAG).debug(
             f"[CHAT-OUT] llm_chars={len(content_arguments)} tts_sent={tts_sent_chars} tool_call={tool_call_flag} preview={content_arguments[:80]}"
@@ -1297,29 +1269,35 @@ class ConnectionHandler:
         record_tools = []
 
         for result, tool_call_data in tool_results:
+            _is_pi = getattr(self.llm, "_is_prompt_injection_provider", False)
+
             if result.action in [
                 Action.RESPONSE,
                 Action.NOTFOUND,
                 Action.ERROR,
             ]:
                 text = result.response if result.response else result.result
-                # 过滤设备端返回的纯布尔值
-                if isinstance(text, bool):
-                    text = ""
-                elif text and str(text).strip().lower() in (
-                    "true", "false", "none", "null",
-                ):
-                    text = ""
+                if _is_pi:
+                    text = ""  # 已流式播报，不重复
+                else:
+                    # 过滤设备端返回的纯布尔值
+                    if isinstance(text, bool):
+                        text = ""
+                    elif text and str(text).strip().lower() in (
+                        "true", "false", "none", "null",
+                    ):
+                        text = ""
                 if streamed_text and text in streamed_text:
                     self.logger.bind(tag=TAG).debug(
                         f"Skipping duplicate TTS for tool {tool_call_data['name']}, already streamed"
                     )
-                else:
+                elif text:
                     self.tts.tts_one_sentence(self, ContentType.TEXT, content_detail=text)
                     self.tts.store_tts_text(self.sentence_id, text)
                 self.dialogue.put(Message(role="assistant", content=text))
             elif result.action == Action.REQLLM:
-                need_llm_tools.append((result, tool_call_data))
+                if not _is_pi:
+                    need_llm_tools.append((result, tool_call_data))
             elif result.action == Action.RECORD:
                 record_tools.append((result, tool_call_data))
             else:

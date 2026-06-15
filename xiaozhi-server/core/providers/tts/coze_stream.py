@@ -313,6 +313,13 @@ class CozeStreamManager:
                 if self.on_tts_completed_callback:
                     await self.on_tts_completed_callback()
 
+            elif event_type in (
+                "conversation.audio.sentence_start",
+                "conversation.audio.delta",
+                "conversation.audio.completed",
+            ):
+                pass  # TTS 音频事件（句子边界/音频块/完成），下游已通过 on_audio_data_callback 处理
+
             elif event_type == "error":
                 error_code: Any = data.get("data", {}).get("code")  # type: ignore[assignment]
                 error_msg: str = data.get("data", {}).get("msg", str(data))  # type: ignore[assignment]
@@ -323,7 +330,7 @@ class CozeStreamManager:
 
             else:
                 # 记录所有未处理的事件（INFO 级别便于调试）
-                logger.bind(tag=TAG).info(f"TTS 未处理事件: {event_type}, 数据={str(data)[:200]}")
+                logger.bind(tag=TAG).debug(f"TTS 未处理事件: {event_type}, 数据={str(data)[:200]}")
 
         except json.JSONDecodeError:
             logger.bind(tag=TAG).warning(f"无法解析 JSON 消息: {msg[:200]}")

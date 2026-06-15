@@ -163,6 +163,9 @@ class ASRProviderBase(ABC):
             total_time = time.monotonic() - total_start_time
             logger.bind(tag=TAG).debug(f"总处理耗时: {total_time:.3f}s")
 
+            # 记录 ASR 完成时间，用于延迟统计
+            conn.asr_end_time = time.monotonic()
+
             # 检查文本长度
             text_len, _ = remove_punctuation_and_length(content_for_length_check)
             self.stop_ws_connection()

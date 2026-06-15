@@ -16,6 +16,31 @@ TAG = __name__
 logger = setup_logging()
 
 
+# ============================================================
+# 提示词注入机制：用于 function calling 的 prompt-injection 模式
+# ============================================================
+# Coze 不支持通过 API 参数传递 tools/functions 定义，
+# 通过 conversation.message.create 事件在每轮对话开始前
+# 注入工具调用提示词，引导 Bot 输出 <tool_call> JSON 格式。
+# 框架侧 connection.py 已内置文本格式工具调用解析。
+
+_pending_function_prompt: Optional[str] = None
+
+
+def set_function_prompt(prompt: str) -> None:
+    """设置待发送的函数提示词（下一轮 ASR 开始时通过 WS 注入）"""
+    global _pending_function_prompt
+    _pending_function_prompt = prompt
+
+
+def _get_and_clear_function_prompt() -> Optional[str]:
+    """获取并清除待发送的函数提示词"""
+    global _pending_function_prompt
+    prompt = _pending_function_prompt
+    _pending_function_prompt = None
+    return prompt
+
+
 class ASRProvider(ASRProviderBase):
     """Coze 流式语音识别 ASR Provider
 
@@ -94,7 +119,7 @@ class ASRProvider(ASRProviderBase):
         if self.ws:
             raw = json.dumps(event, ensure_ascii=False)
             etype = event.get("event_type", "?")
-            logger.bind(tag=TAG).debug(f"[ASR SEND] {etype} → {raw[:200]}")
+            logger.bind(tag=TAG).debug(f"[ASR SEND] {etype} -> {raw[:200]}")
             await self.ws.send(raw)
 
     async def open_audio_channels(self, conn: "ConnectionHandler") -> None:
@@ -175,9 +200,6 @@ class ASRProvider(ASRProviderBase):
                     await self._send_chat_update()
                     logger.bind(tag=TAG).info("已发送 chat.update 配置")
 
-                    # ★ 关键改动：不等待 chat.updated 响应就立即标记可发音频
-                    #   对齐参考实现 realtime_voice.py 的并发收发模型：
-                    #   configure_call() 后立即启动 mic 线程和 recv 线程并发运行
                     self._ready_event.set()
                     logger.bind(tag=TAG).info("ASR 会话已就绪（并发模式，不阻塞等确认）")
 
@@ -264,6 +286,23 @@ class ASRProvider(ASRProviderBase):
 
         # 重新发送配置（每轮必须重新配置）
         await self._send_chat_update()
+
+        # ★ 注入函数调用提示词（prompt-injection 模式）
+        # Coze 不支持原生 tools/functions API，通过 conversation.message.create
+        # 在每轮对话开始时将工具定义注入 Bot 上下文，引导 Bot 输出 <tool_call> JSON
+        prompt = _get_and_clear_function_prompt()
+        if prompt and self.ws:
+            try:
+                await self._send({
+                    "id": self._next_id(),
+                    "event_type": "conversation.message.create",
+                    "data": {"role": "user", "content": prompt},
+                })
+                logger.bind(tag=TAG).info(
+                    f"[ASR] 已注入函数提示词 ({len(prompt)} chars), 第{self._round_id}轮"
+                )
+            except Exception as e:
+                logger.bind(tag=TAG).error(f"注入函数提示词失败: {e}")
 
         # 并发模式：立即标记可发音频，不等待服务端确认
         self._ready_event.set()
@@ -369,7 +408,7 @@ class ASRProvider(ASRProviderBase):
 
                 event_type = data.get("event_type", "")
 
-                # 全量事件日志：排查服务端响应问题（无论是否处理都记录）
+                # 全量事件日志（DEBUG 级别）
                 logger.bind(tag=TAG).debug(
                     f"[ASR RECV] event_type={event_type}, "
                     f"round={active_round}, processing={self.is_processing}"
@@ -506,6 +545,19 @@ class ASRProvider(ASRProviderBase):
                     logger.bind(tag=TAG).debug(f"ASR: input_audio_buffer.cleared, logid={logid}")
 
                 # ============================================================
+                # 音频输出事件（TTS 产生的音频块，ASR 模式忽略）
+                # ============================================================
+                elif event_type in (
+                    "conversation.audio.delta",
+                    "conversation.audio.sentence_start",
+                    "conversation.audio.completed",
+                    "conversation.audio_transcript.delta",
+                    "speech.audio.update",
+                    "speech.audio.completed",
+                ):
+                    pass  # TTS 音频事件，ASR 模式下无需处理
+
+                # ============================================================
                 # 错误
                 # ============================================================
                 elif event_type == "error":
@@ -519,7 +571,7 @@ class ASRProvider(ASRProviderBase):
                     self.is_processing = False
 
                 else:
-                    logger.bind(tag=TAG).info(f"ASR 未处理事件: {event_type}")
+                    logger.bind(tag=TAG).debug(f"ASR 未处理事件: {event_type}")
 
             logger.bind(tag=TAG).info(
                 f"ASR 监听循环退出, text='{self.text}', frames={self._audio_frame_count}"
@@ -568,10 +620,15 @@ class ASRProvider(ASRProviderBase):
                 logger.bind(tag=TAG).debug(f"发送清除缓冲区时出错: {e}")
 
     def stop_ws_connection(self) -> None:
-        """停止 ASR 连接"""
-        if self.ws:
-            asyncio.create_task(self.ws.close())
-            self.ws = None
+        """标记 ASR 处理已停止（不关闭 WebSocket）
+
+        /v1/chat 统一端点需要保持 WS 连接以接收：
+          - conversation.message.delta (role=assistant) → LLM 流式 token
+          - conversation.message.completed (role=assistant) → LLM 完成哨兵
+          - 下一轮对话复用
+
+        仅重置处理标志，不关闭 WebSocket。
+        """
         self.is_processing = False
         self._is_stopping = False
 

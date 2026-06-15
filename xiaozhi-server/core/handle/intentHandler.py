@@ -1,5 +1,6 @@
 import json
 import uuid
+import time
 import asyncio
 from typing import TYPE_CHECKING
 
@@ -216,6 +217,13 @@ async def process_intent_result(
 def speak_txt(conn: "ConnectionHandler", text):
     # 记录文本到 sentence_id 映射
     conn.tts.store_tts_text(conn.sentence_id, text)
+
+    # 性能统计：ASR 结束 → TTS 首句开始（意图直接处理路径）
+    if conn.asr_end_time > 0:
+        latency = time.monotonic() - conn.asr_end_time
+        conn.logger.bind(tag=TAG).info(
+            f"性能: 总延迟={latency:.3f}s"
+        )
 
     conn.tts.tts_text_queue.put(
         TTSMessageDTO(

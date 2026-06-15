@@ -3,11 +3,11 @@ import gzip
 import uuid
 import asyncio
 import websockets
-import opuslib_next
+import opuslib_next  # type: ignore[import]
 from core.providers.asr.base import ASRProviderBase
 from config.logger import setup_logging
 from core.providers.asr.dto.dto import InterfaceType
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional, Tuple, List, Any
 
 if TYPE_CHECKING:
     from core.connection import ConnectionHandler
@@ -17,27 +17,27 @@ logger = setup_logging()
 
 
 class ASRProvider(ASRProviderBase):
-    def __init__(self, config, delete_audio_file):
+    def __init__(self, config: dict[str, Any], delete_audio_file: bool):
         super().__init__()
         self.interface_type = InterfaceType.STREAM
-        self.config = config
-        self.text = ""
-        self.decoder = opuslib_next.Decoder(16000, 1)
-        self.asr_ws = None
-        self.forward_task = None
-        self.is_processing = False  # 添加处理状态标志
-        self._is_stopping = False  # 添加停止标志，防止竞态条件
+        self.config: dict[str, Any] = config
+        self.text: str = ""
+        self.decoder: Any = opuslib_next.Decoder(16000, 1)  # type: ignore[assignment]
+        self.asr_ws: Optional[Any] = None
+        self.forward_task: Optional[asyncio.Task[Any]] = None
+        self.is_processing: bool = False  # 添加处理状态标志
+        self._is_stopping: bool = False  # 添加停止标志，防止竞态条件
 
         # 配置参数
-        self.appid = str(config.get("appid"))
-        self.access_token = config.get("access_token")
+        self.appid: str = str(config.get("appid"))
+        self.access_token: Optional[str] = config.get("access_token")
         # 资源ID，用于区分不同的ASR模型（默认1.0模型小时版，v2版本使用seed-asr）
-        self.resource_id = config.get("resource_id", "volc.bigasr.sauc.duration")
+        self.resource_id: str = config.get("resource_id", "volc.bigasr.sauc.duration")
 
-        self.boosting_table_name = config.get("boosting_table_name", "")
-        self.correct_table_name = config.get("correct_table_name", "")
-        self.output_dir = config.get("output_dir", "tmp/")
-        self.delete_audio_file = delete_audio_file
+        self.boosting_table_name: str = config.get("boosting_table_name", "")
+        self.correct_table_name: str = config.get("correct_table_name", "")
+        self.output_dir: str = config.get("output_dir", "tmp/")
+        self.delete_audio_file: bool = delete_audio_file
 
         # 火山引擎ASR配置
         enable_multilingual = config.get("enable_multilingual", False)
@@ -45,44 +45,44 @@ class ASRProvider(ASRProviderBase):
             False if str(enable_multilingual).lower() == "false" else True
         )
         if self.enable_multilingual:
-            self.ws_url = "wss://openspeech.bytedance.com/api/v3/sauc/bigmodel_nostream"
+            self.ws_url: str = "wss://openspeech.bytedance.com/api/v3/sauc/bigmodel_nostream"
         else:
-            self.ws_url = "wss://openspeech.bytedance.com/api/v3/sauc/bigmodel_async"
-        self.uid = config.get("uid", "streaming_asr_service")
-        self.workflow = config.get(
+            self.ws_url: str = "wss://openspeech.bytedance.com/api/v3/sauc/bigmodel_async"
+        self.uid: str = config.get("uid", "streaming_asr_service")
+        self.workflow: str = config.get(
             "workflow", "audio_in,resample,partition,vad,fe,decode,itn,nlu_punctuate"
         )
-        self.result_type = config.get("result_type", "single")
-        self.format = config.get("format", "pcm")
-        self.codec = config.get("codec", "pcm")
-        self.rate = config.get("sample_rate", 16000)
+        self.result_type: str = config.get("result_type", "single")
+        self.format: str = config.get("format", "pcm")
+        self.codec: str = config.get("codec", "pcm")
+        self.rate: int = config.get("sample_rate", 16000)
         # language参数仅在多语种模式(bigmodel_nostream)下有效
-        self.language = config.get("language") if self.enable_multilingual else None
-        self.bits = config.get("bits", 16)
-        self.channel = config.get("channel", 1)
-        self.auth_method = config.get("auth_method", "token")
-        self.secret = config.get("secret", "access_secret")
+        self.language: Optional[str] = config.get("language") if self.enable_multilingual else None
+        self.bits: int = config.get("bits", 16)
+        self.channel: int = config.get("channel", 1)
+        self.auth_method: str = config.get("auth_method", "token")
+        self.secret: str = config.get("secret", "access_secret")
         end_window_size = config.get("end_window_size")
-        self.end_window_size = int(end_window_size) if end_window_size else 200
+        self.end_window_size: int = int(end_window_size) if end_window_size else 200
 
-    async def open_audio_channels(self, conn):
+    async def open_audio_channels(self, conn: "ConnectionHandler") -> None:
         await super().open_audio_channels(conn)
 
-    async def receive_audio(self, conn: "ConnectionHandler", audio, audio_have_voice):
+    async def receive_audio(self, conn: "ConnectionHandler", audio: bytes, audio_have_voice: bool) -> None:
         # 先调用父类方法处理基础逻辑
-        await super().receive_audio(conn, audio, audio_have_voice)
+        await super().receive_audio(conn, audio, audio_have_voice)  # type: ignore[arg-type]
         
         # 如果本次有声音，且之前没有建立连接
         if audio_have_voice and self.asr_ws is None and not self.is_processing:
             try:
                 self.is_processing = True
                 # 建立新的WebSocket连接
-                headers = self.token_auth() if self.auth_method == "token" else None
+                headers: Optional[dict[str, str | None]] = self.token_auth() if self.auth_method == "token" else None
                 logger.bind(tag=TAG).info(f"正在连接ASR服务，headers: {headers}")
 
                 self.asr_ws = await websockets.connect(
                     self.ws_url,
-                    additional_headers=headers,
+                    additional_headers=headers,  # type: ignore[arg-type]
                     max_size=1000000000,
                     ping_interval=None,
                     ping_timeout=None,
@@ -122,8 +122,9 @@ class ASRProvider(ASRProviderBase):
                 self.forward_task = asyncio.create_task(self._forward_asr_results(conn))
 
                 # 发送缓存的音频数据
-                if conn.asr_audio and len(conn.asr_audio) > 0:
-                    for cached_audio in conn.asr_audio[-10:]:
+                audio_cache: List[bytes] = conn.asr_audio  # type: ignore[assignment]
+                if audio_cache and len(audio_cache) > 0:
+                    for cached_audio in audio_cache[-10:]:  # type: ignore[assignment]
                         try:
                             pcm_frame = self.decoder.decode(cached_audio, 960)
                             payload = gzip.compress(pcm_frame)
@@ -160,11 +161,11 @@ class ASRProvider(ASRProviderBase):
             except Exception as e:
                 logger.bind(tag=TAG).info(f"发送音频数据时发生错误: {e}")
 
-    async def _forward_asr_results(self, conn: "ConnectionHandler"):
+    async def _forward_asr_results(self, conn: "ConnectionHandler") -> None:
         try:
             while self.asr_ws and not conn.stop_event.is_set():
                 # 获取当前连接的音频数据
-                audio_data = conn.asr_audio
+                audio_data: List[bytes] = conn.asr_audio  # type: ignore[assignment]
                 try:
                     response = await self.asr_ws.recv()
                     result = self.parse_response(response)
@@ -261,14 +262,14 @@ class ASRProvider(ASRProviderBase):
             # 重置所有音频相关状态
             conn.reset_audio_states()
 
-    def stop_ws_connection(self):
+    def stop_ws_connection(self) -> None:
         if self.asr_ws:
             asyncio.create_task(self.asr_ws.close())
             self.asr_ws = None
         self.is_processing = False
         self._is_stopping = False
 
-    async def _send_stop_request(self):
+    async def _send_stop_request(self) -> None:
         """发送最后一个音频帧以通知服务器结束"""
         self._is_stopping = True  # 先标记为停止状态，阻止后续音频发送
         if self.asr_ws:
@@ -285,8 +286,8 @@ class ASRProvider(ASRProviderBase):
             except Exception as e:
                 logger.bind(tag=TAG).debug(f"发送结束音频帧时出错: {e}")
 
-    def construct_request(self, reqid):
-        req = {
+    def construct_request(self, reqid: str) -> dict[str, Any]:
+        req: dict[str, Any] = {
             "app": {
                 "appid": self.appid,
                 "token": self.access_token,
@@ -323,7 +324,7 @@ class ASRProvider(ASRProviderBase):
         )
         return req
 
-    def token_auth(self):
+    def token_auth(self) -> dict[str, str | None]:
         return {
             "X-Api-App-Key": self.appid,
             "X-Api-Access-Key": self.access_token,
@@ -333,14 +334,14 @@ class ASRProvider(ASRProviderBase):
 
     def generate_header(
         self,
-        version=0x01,
-        message_type=0x01,
-        message_type_specific_flags=0x00,
-        serial_method=0x01,
-        compression_type=0x01,
-        reserved_data=0x00,
+        version: int = 0x01,
+        message_type: int = 0x01,
+        message_type_specific_flags: int = 0x00,
+        serial_method: int = 0x01,
+        compression_type: int = 0x01,
+        reserved_data: int = 0x00,
         extension_header: bytes = b"",
-    ):
+    ) -> bytearray:
         header = bytearray()
         header_size = int(len(extension_header) / 4) + 1
         header.append((version << 4) | header_size)
@@ -350,7 +351,7 @@ class ASRProvider(ASRProviderBase):
         header.extend(extension_header)
         return header
 
-    def generate_audio_default_header(self):
+    def generate_audio_default_header(self) -> bytearray:
         return self.generate_header(
             version=0x01,
             message_type=0x02,
@@ -359,7 +360,7 @@ class ASRProvider(ASRProviderBase):
             compression_type=0x01,
         )
 
-    def generate_last_audio_default_header(self):
+    def generate_last_audio_default_header(self) -> bytearray:
         return self.generate_header(
             version=0x01,
             message_type=0x02,
@@ -368,7 +369,7 @@ class ASRProvider(ASRProviderBase):
             compression_type=0x01,
         )
 
-    def parse_response(self, res: bytes) -> dict:
+    def parse_response(self, res: bytes) -> dict[str, Any]:
         try:
             # 检查响应长度
             if len(res) < 4:
@@ -414,12 +415,18 @@ class ASRProvider(ASRProviderBase):
             logger.bind(tag=TAG).error(f"原始响应数据: {res.hex()}")
             raise
 
-    async def speech_to_text(self, opus_data, session_id, audio_format, artifacts=None):
+    async def speech_to_text(
+        self,
+        opus_data: list[Any],
+        session_id: str,
+        audio_format: str = "opus",
+        artifacts: Optional[Any] = None,
+    ) -> Tuple[Optional[str], Optional[str]]:
         result = self.text
         self.text = ""  # 清空text
         return result, None
 
-    async def close(self):
+    async def close(self) -> None:
         """资源清理方法"""
         if self.asr_ws:
             await self.asr_ws.close()

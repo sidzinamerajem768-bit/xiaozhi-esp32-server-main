@@ -1,0 +1,21 @@
+# Python 3.10+ 要求
+# FastAPI框架 - 对应Java的Spring Boot
+fastapi[standard]>=0.115.0
+
+# ASGI服务器 - 对应Java的内嵌Tomcat
+uvicorn[standard]>=0.30.0
+
+# ORM框架 - 对应Java的MyBatis Plus
+sqlalchemy>=2.0.0
+
+# MySQL驱动 - 对应Java的mysql-connector-j
+pymysql>=1.1.0
+
+# 环境变量读取 - 对应Java的application.yml配置
+python-dotenv>=1.0.0
+
+# 配置管理 - Pydantic的settings扩展
+pydantic-settings>=2.0.0
+
+# 密码加密 - 对应Java的BCryptPasswordEncoder
+passlib[bcrypt]>=1.7.4
